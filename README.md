@@ -220,31 +220,31 @@ python -m client.run_all_demos
 ## 📁 Project Structure (Core)
 
 ### server/
-  main.py                # FastAPI aggregator + dashboard routes
-  database.py            # SQLite metadata DB config
-  models.py              # SQLite tables: hospitals, rounds, updates, etc.
-  postgres_config.py     # PostgreSQL config (real dataset)
-  ehr_models.py          # PostgreSQL tables: patient_records, etc.
-  model_definition.py    # Tabular MLP (PyTorch)
-  image_model.py         # Image CNN (PyTorch)
-  text_model.py          # Text model (PyTorch)
-  aggregation.py         # FedAvg implementation
-  privacy.py             # DP (clip+noise) + integrity validation
-  reports.py             # PDF/CSV report generation
-  templates/dashboard.html
-  static/css/style.css
-  static/js/dashboard.js
+  - main.py                # FastAPI aggregator + dashboard routes
+  - database.py            # SQLite metadata DB config
+  - models.py              # SQLite tables: hospitals, rounds, updates, etc.
+  - postgres_config.py     # PostgreSQL config (real dataset)
+  - ehr_models.py          # PostgreSQL tables: patient_records, etc.
+  - model_definition.py    # Tabular MLP (PyTorch)
+  - image_model.py         # Image CNN (PyTorch)
+  - text_model.py          # Text model (PyTorch)
+  - aggregation.py         # FedAvg implementation
+  - privacy.py             # DP (clip+noise) + integrity validation
+  - reports.py             # PDF/CSV report generation
+  - templates/dashboard.html
+  - static/css/style.css
+  - static/js/dashboard.js
 
 ### client/
-  run_simulation.py      # Runs federated rounds (tabular)
-  hospital_client.py     # Hospital node: download/train/submit update
-  prepare_real_data.py   # UCI Heart Disease → PostgreSQL
-  load_from_postgres.py  # PostgreSQL → .pt tensors (compatible training)
-  prepare_image_data.py  # Simulated X-ray dataset
-  image_client.py        # Local CNN demo
-  prepare_text_data.py   # Simulated clinical notes dataset
-  text_client.py         # Local text model demo
-  run_all_demos.py       # Runs tabular+image+text demos
+  - run_simulation.py      # Runs federated rounds (tabular)
+  - hospital_client.py     # Hospital node: download/train/submit update
+  - prepare_real_data.py   # UCI Heart Disease → PostgreSQL
+  - load_from_postgres.py  # PostgreSQL → .pt tensors (compatible training)
+  - prepare_image_data.py  # Simulated X-ray dataset
+  - image_client.py        # Local CNN demo
+  - prepare_text_data.py   # Simulated clinical notes dataset
+  - text_client.py         # Local text model demo
+  - run_all_demos.py       # Runs tabular+image+text demos
 
 ---
 
