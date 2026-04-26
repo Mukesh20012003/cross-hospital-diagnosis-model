@@ -1,0 +1,289 @@
+<!-- server/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Hospital Diagnosis Model - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">
+            <span class="icon">🏥</span>
+            <h1>Cross-Hospital Diagnosis Model</h1>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard" class="active">📊 Dashboard</a>
+            <a href="/docs" target="_blank">📄 API Docs</a>
+            <a href="#" onclick="exportPDF()">📄 PDF Report</a>
+            <a href="#" onclick="exportCSV()">📥 CSV Export</a>
+            <a href="#" onclick="exportAuditPDF()">📋 Audit Log</a>
+            <a href="/privacy_info" target="_blank">🔒 Privacy</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>Federated Learning Dashboard</h2>
+            <p>Real-time monitoring of cross-hospital collaborative model training</p>
+        </div>
+
+        <!-- Privacy Banner -->
+        <div class="privacy-banner">
+            <span class="icon">🔒</span>
+            <div class="text">
+                <h4>Privacy-Preserving Federated Learning</h4>
+                <p>No raw patient data is shared. Only model weights are exchanged. Differential Privacy (ε=1.0) applied to all updates. All actions are audit-logged.</p>
+            </div>
+        </div>
+
+        <!-- Round Status Banner -->
+        <div class="round-banner" id="round-status-banner">
+            <div class="round-info">
+                <h3>Loading round status...</h3>
+            </div>
+        </div>
+
+        <!-- Notification Area -->
+        <div id="notification-area"></div>
+
+        <!-- STATS CARDS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">🏥</div>
+                <div class="stat-info">
+                    <h3 id="total-hospitals">0</h3>
+                    <p>Total Hospitals</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-info">
+                    <h3 id="active-hospitals">0</h3>
+                    <p>Active Hospitals</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">🔄</div>
+                <div class="stat-info">
+                    <h3 id="current-round">0</h3>
+                    <p>Current Round</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">🎯</div>
+                <div class="stat-info">
+                    <h3 id="latest-accuracy">N/A</h3>
+                    <p>Latest Accuracy</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">📤</div>
+                <div class="stat-info">
+                    <h3 id="total-updates">0</h3>
+                    <p>Total Updates</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">📥</div>
+                <div class="stat-info">
+                    <h3 id="model-downloads">0</h3>
+                    <p>Model Downloads</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCURACY IMPROVEMENT SUMMARY -->
+        <div class="card" style="margin-bottom: 25px;">
+            <div class="card-header">
+                <h3>📈 Accuracy Improvement Summary</h3>
+            </div>
+            <div class="card-body" id="improvement-summary">
+                <p>Loading improvement data...</p>
+            </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📈 Model Accuracy Over Rounds</h3>
+                    <button class="btn btn-outline" onclick="loadDashboard()">🔄 Refresh</button>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="accuracy-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global vs Single Node Comparison -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚖️ Global Model vs Single Hospital</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="comparison-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUDIT LOGS -->
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 Recent Activity</h3>
+                    <button class="btn btn-outline" onclick="exportAuditPDF()">Export</button>
+                </div>
+                <div class="card-body">
+                    <div id="audit-logs-container" style="max-height: 400px; overflow-y: auto;">
+                        <p>Loading audit logs...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Metadata Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📤 Upload Hospital Metadata</h3>
+                </div>
+                <div class="card-body">
+                    <form id="metadata-form" onsubmit="uploadMetadata(event)">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.9em;">API Key:</label>
+                            <input type="text" id="meta-api-key" placeholder="Enter hospital API key" 
+                                   style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:0.9em;" required>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.9em;">Hospital Name:</label>
+                            <input type="text" id="meta-hospital-name" placeholder="e.g., hospital_1"
+                                   style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:0.9em;" required>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.9em;">Data Description:</label>
+                            <input type="text" id="meta-description" placeholder="e.g., Heart disease tabular data"
+                                   style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:0.9em;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.9em;">Number of Samples:</label>
+                            <input type="number" id="meta-samples" placeholder="e.g., 300" value="300"
+                                   style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:0.9em;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:600; margin-bottom:4px; font-size:0.9em;">Data Type:</label>
+                            <select id="meta-data-type" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:0.9em;">
+                                <option value="tabular">Tabular (EHR)</option>
+                                <option value="imaging">Medical Imaging</option>
+                                <option value="text">Clinical Notes</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;">📤 Upload Metadata</button>
+                    </form>
+                    <div id="metadata-result" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUNDS TABLE -->
+        <div class="content-grid full">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔄 Training Rounds History</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="startNewRound()">🚀 Start New Round</button>
+                        <button class="btn btn-outline" onclick="exportCSV()">📥 Export CSV</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Round</th>
+                                <th>Status</th>
+                                <th>Participants</th>
+                                <th>Accuracy</th>
+                                <th>Improvement</th>
+                                <th>Loss</th>
+                                <th>Started</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rounds-table-body">
+                            <tr><td colspan="7">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOSPITALS TABLE -->
+        <div class="content-grid full">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🏥 Registered Hospitals</h3>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Hospital Name</th>
+                                <th>Location</th>
+                                <th>Data Size</th>
+                                <th>Status</th>
+                                <th>Last Active</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hospitals-table-body">
+                            <tr><td colspan="5">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODEL VERSIONS TABLE -->
+        <div class="content-grid full">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📦 Global Model Versions</h3>
+                </div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Round</th>
+                                <th>Accuracy</th>
+                                <th>Loss</th>
+                                <th>Downloads</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="models-table-body">
+                            <tr><td colspan="6">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>🔒 Cross-Hospital Diagnosis Model — Federated Learning Platform | 
+               Privacy-Preserving Collaborative Training | 
+               Differential Privacy Applied (ε=1.0) |
+               No raw patient data is shared between institutions</p>
+        </div>
+
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
